@@ -183,50 +183,6 @@ public class app2 {
 		}
 		rs.close();
 
-		// p = Pattern.compile("^how much");
-		// m = p.matcher(input);
-		// if (m.find()) {
-		// System.out.println("how much?");
-		// for (int i = 0; i < input_words.length; i++) {
-		// if (isColumn(input_words[i])) {
-		// projectionList.add("ifnull(sum(" + input_words[i]
-		// + "),0) total_of_" + input_words[i]);
-		// break;
-		// }
-		// }
-		// }
-		// p = Pattern.compile("^(how many|count|number)");
-		// m = p.matcher(input);
-		// if (m.find()) {
-		// System.out.println("how many?");
-		// for (int i = 0; i < input_words.length; i++) {
-		// if (isColumn(input_words[i])) {
-		// projectionList.add("ifnull(count(distinct "
-		// + input_words[i] + "),0) count_of_"
-		// + input_words[i]);
-		// break;
-		// }
-		// if (isNonVerbTable(input_words[i])) {
-		// projectionList.add("ifnull(count(distinct "
-		// + getPrimaryColumn(input_words[i])
-		// + "),0) count_of_" + input_words[i]);
-		// break;
-		// }
-		// }
-		// }
-		// p = Pattern.compile("^(what|show|display|find|which)");
-		// m = p.matcher(input);
-		// if (m.find()) {
-		// System.out.println("what?");
-		// for (int i = 0; i < input_words.length; i++) {
-		// if (isNonVerbTable(input_words[i])) {
-		// projectionList.addAll(getAllColumns(input_words[i]));
-		// groupList.addAll(getAllColumns(input_words[i]));
-		// break;
-		// }
-		// }
-		// }
-
 		// projection list
 		rs = conn_mysql
 				.createStatement()

@@ -3,6 +3,7 @@ package com.tcs.nlpboot;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.json.JSONArray;
@@ -22,11 +23,12 @@ public class App {
 
 	@RequestMapping(value = "/QueryProcessor", method = RequestMethod.GET)
 	@ResponseBody
-	String home(@RequestParam("text") String input) {
+	String home(@RequestParam("text") String input) throws SQLException {
 		String SQL = "";
+		Connection conn_mysql = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection conn_mysql = DriverManager.getConnection("jdbc:mysql://"
+			conn_mysql = DriverManager.getConnection("jdbc:mysql://"
 					+ MYSQL_DB_HOST + ":3306/" + MYSQL_DB_NAME
 					+ "?zeroDateTimeBehavior=convertToNull", MYSQL_DB_USERNAME,
 					MYSQL_DB_PASSWORD);
@@ -40,6 +42,8 @@ public class App {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ("{\"Error\":\"" + e.getMessage() + "\",\"SQL\":\"" + SQL + "\"}");
+		} finally {
+			conn_mysql.close();
 		}
 		return "HW";
 	}
