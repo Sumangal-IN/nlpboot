@@ -1,0 +1,53 @@
+
+<html>
+<head>
+<title>Voice command project by Sumangal</title>
+<script src="angular.min.js"></script>
+<script src="index.js"></script>
+<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+<script defer
+	src="https://use.fontawesome.com/releases/v5.0.9/js/all.js"
+	integrity="sha384-8iPTk2s/jMVj81dnzb/iFR2sdA7u06vHJyyLlAd4snFpCl/SnyUjRrbdJsw1pGIl"
+	crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="index.css">
+<head>
+<body ng-app="voiceApp">
+	<div ng-controller="voiceAppController">
+		<div class="page-header"
+			style="background-color: #192f53; position: absolute; width: 100%; height: 100px">
+			<div class="container-fluid pull-left"
+				style="margin-top: 30px; width: 100%">
+				<div class="input-group">
+					<input class="form-control input-lg" ng-class="input_state"
+						id="inputlg" type="text" placeholder="Say Kingfisher ..."
+						ng-model="question">
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid">
+			<div style="position: absolute; top: 110px;" id="table">
+				<table class="blueTable" ng-if="error==0">
+					<tr ng-if="$index==0" ng-repeat="row in result">
+						<th ng-repeat="(key, data) in row">{{key}}
+						</th>
+					</tr>
+					<tr ng-repeat="row in result">
+						<td ng-repeat="(key, data) in row">{{data}}
+						</td>
+					</tr>
+				</table>
+				<span ng-if="error==1" style="color:red">Error: {{errortext}}</span>
+			</div>
+		</div>
+	</div>
+	<div class="page-footer"
+		style="background-color: #192f53; position: absolute; width: 100%; height: 50px; top: 92%">
+		<div class="container-fluid"
+			style="width: 100%; margin-top: 15px; text-align: right">
+			<span style="color: white"><i class="fas fa-envelope"></i> <a
+				href="mailto:sumangal.mandal@kingfisher.com">sumangal.mandal@kingfisher.com</a></span>
+		</div>
+	</div>
+</body>
+</html>
