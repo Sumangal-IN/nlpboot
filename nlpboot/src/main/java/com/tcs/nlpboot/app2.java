@@ -506,30 +506,30 @@ public class app2 {
 		return json;
 	}
 
-	public static void main(String args[]) throws Exception {
-		Class.forName("com.mysql.jdbc.Driver");
-		Connection conn_mysql = DriverManager.getConnection("jdbc:mysql://"
-				+ MYSQL_DB_HOST + ":3306/" + MYSQL_DB_NAME
-				+ "?zeroDateTimeBehavior=convertToNull", MYSQL_DB_USERNAME,
-				MYSQL_DB_PASSWORD);
-
-		Statement statement = conn_mysql.createStatement();
-		ResultSet rs = statement
-				.executeQuery("select * from test where enable=1");
-		String SQL = "";
-		while (rs.next()) {
-			SQL = getSQL(rs.getString("input"), conn_mysql);
-			System.out.println(SQL);
-			System.out.println();
-		}
-		rs.close();
-
-		// if (SQL != null) {
-		// rs = statement.executeQuery(SQL);
-		// JSONArray json = convert(rs);
-		// System.out.println(json);
-		// }
-
-		conn_mysql.close();
-	}
+	// public static void main(String args[]) throws Exception {
+	// Class.forName("com.mysql.jdbc.Driver");
+	// Connection conn_mysql = DriverManager.getConnection("jdbc:mysql://"
+	// + MYSQL_DB_HOST + ":3306/" + MYSQL_DB_NAME
+	// + "?zeroDateTimeBehavior=convertToNull", MYSQL_DB_USERNAME,
+	// MYSQL_DB_PASSWORD);
+	//
+	// Statement statement = conn_mysql.createStatement();
+	// ResultSet rs = statement
+	// .executeQuery("select * from test where enable=1");
+	// String SQL = "";
+	// while (rs.next()) {
+	// SQL = getSQL(rs.getString("input"), conn_mysql);
+	// System.out.println(SQL);
+	// System.out.println();
+	// }
+	// rs.close();
+	//
+	// // if (SQL != null) {
+	// // rs = statement.executeQuery(SQL);
+	// // JSONArray json = convert(rs);
+	// // System.out.println(json);
+	// // }
+	//
+	// conn_mysql.close();
+	// }
 }
