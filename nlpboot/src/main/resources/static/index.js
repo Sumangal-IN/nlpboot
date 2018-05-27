@@ -6,7 +6,8 @@ app
 					$scope.addSpace = function(text) {
 						return text.split('_').join(' ');
 					};
-					console.log('started');
+
+					console.log('controller() started');
 					$scope.error = 0;
 					var interim_text = '';
 					var final_text = '';
@@ -28,15 +29,15 @@ app
 						recognition.start();
 
 						recognition.onstart = function() {
-							console.log('speak now');
+							console.log('onstart() speak now');
 						};
 
 						recognition.onerror = function(event) {
-							console.log(event.error);
+							console.log('onerror() ' + event.error);
 						};
 
 						recognition.onend = function() {
-							console.log('end');
+							console.log('onend() end');
 							final_text = '';
 							interim_text = '';
 							$scope.input_state = 'search-input-red';
@@ -89,6 +90,12 @@ app
 																	$scope.error = 0;
 																	$scope.result = data.Result;
 																}
+																console
+																		.log('going to sleep');
+																final_text = '';
+																interim_text = '';
+																$scope.input_state = 'search-input-red';
+																ignore = true;
 															},
 															function errorCallback(
 																	response) {
@@ -107,7 +114,10 @@ app
 										$scope.$apply();
 									}
 								} else {
-									if ((event.results[i][0].transcript
+									console.log((event.results[i][0].transcript
+											.toUpperCase())
+											.startsWith('KINGFISHER'));
+									if ((event.results[i][0].transcript.trim()
 											.toUpperCase())
 											.startsWith('KINGFISHER')) {
 										$scope.input_state = 'search-input-green';

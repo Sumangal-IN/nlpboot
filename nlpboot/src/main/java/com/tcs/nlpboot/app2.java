@@ -1,10 +1,10 @@
 package com.tcs.nlpboot;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,8 +22,9 @@ public class app2 {
 	public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
 	public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
 
+	static int relationship_depth = 4;
 	static ArrayList<String[]> word_replace = new ArrayList<String[]>();
-	static ArrayList<String[]> metadata = new ArrayList<String[]>();
+	static ArrayList<String[]> wordpool = new ArrayList<String[]>();
 	static ArrayList<String[]> table_join_conditions = new ArrayList<String[]>();
 	static ArrayList<String> nv_tables = new ArrayList<String>();
 	static ArrayList<String> v_tables = new ArrayList<String>();
@@ -36,23 +37,49 @@ public class app2 {
 	static ArrayList<String> limitList = new ArrayList<String>();
 	static ArrayList<String> groupList = new ArrayList<String>();
 	static ArrayList<String> havingList = new ArrayList<String>();
+	static ArrayList<String[]> sentence_coverage = new ArrayList<String[]>();
 
 	public static String getSQL(String input, Connection conn_mysql)
 			throws Exception {
 		System.out.println("Input :           " + input);
 		word_replace = new ArrayList<String[]>();
-		metadata = new ArrayList<String[]>();
+		wordpool = new ArrayList<String[]>();
 		table_join_conditions = new ArrayList<String[]>();
 		nv_tables = new ArrayList<String>();
 		v_tables = new ArrayList<String>();
+		sentence_coverage = new ArrayList<String[]>();
 
 		Statement statement = conn_mysql.createStatement();
+		Statement statement2 = conn_mysql.createStatement();
+		Statement statement3 = conn_mysql.createStatement();
 		ResultSet rs = statement.executeQuery("select * from word_replace");
 		while (rs.next()) {
 			String[] words_pair = new String[2];
 			words_pair[0] = rs.getString("word");
 			words_pair[1] = rs.getString("new_word");
 			word_replace.add(words_pair);
+		}
+		rs.close();
+
+		rs = statement.executeQuery("select * from metadata_tables");
+		while (rs.next()) {
+			ResultSet rs2 = statement2
+					.executeQuery("select * from metadata_column where auto_resolve=1 and table_id="
+							+ rs.getInt("id"));
+			while (rs2.next()) {
+				ResultSet rs3 = statement3.executeQuery("select "
+						+ rs2.getString("name") + " from "
+						+ rs.getString("name"));
+				while (rs3.next()) {
+					String[] words_pair = new String[2];
+					words_pair[0] = rs.getString("name") + "."
+							+ rs2.getString("name");
+					words_pair[1] = rs3.getString(1);
+					wordpool.add(words_pair);
+				}
+				rs3.close();
+			}
+			rs2.close();
 		}
 		rs.close();
 
@@ -111,18 +138,41 @@ public class app2 {
 			input = input.replaceAll("  ", " ");
 		}
 		input = input.trim();
+		String input_coverage = input;
+
 		// System.out.println("after word replacement .....");
 		// System.out.println(input);
 
 		// tokenizing
 		// tables in use
 		String input_words[] = input.split(" ");
+
+		for (int i = 0; i < input_words.length; i++) {
+			String[] word_pair = new String[2];
+			word_pair[0] = input_words[i];
+			word_pair[1] = "0";
+			sentence_coverage.add(word_pair);
+		}
+
 		Set<String> tables = new HashSet<String>();
 		for (int i = 0; i < input_words.length; i++) {
 			if (isVerbTable(input_words[i]) || isNonVerbTable(input_words[i])) {
+				markKnown(input_words[i]);
 				tables.add(input_words[i]);
 			}
 		}
+
+		for (String word_pair[] : wordpool) {
+			p = Pattern.compile("^" + word_pair[1] + " | " + word_pair[1]
+					+ " | " + word_pair[1] + "$");
+			m = p.matcher(input);
+			if (m.find()) {
+				markKnown(input.substring(m.start(), m.end()));
+				conditionList.add(word_pair[0] + "='" + word_pair[1] + "'");
+				tables.add(word_pair[0].split("\\.")[0]);
+			}
+		}
+
 		for (String table : tables) {
 			tables_in_use.add(table);
 		}
@@ -145,6 +195,7 @@ public class app2 {
 		rs = conn_mysql.createStatement().executeQuery("select * from starter");
 		while (rs.next()) {
 			if (input.startsWith(rs.getString(2))) {
+				markKnown(rs.getString(2));
 				System.out.println("Starts with : " + rs.getString(2));
 				ArrayList<String> field = new ArrayList<String>();
 				if (rs.getString(3).equals("nverb.primary")) {
@@ -187,96 +238,79 @@ public class app2 {
 		rs = conn_mysql
 				.createStatement()
 				.executeQuery(
-						"select metadata_expression.id,expression,projection from metadata_expression,metadata_tables "
-								+ "where metadata_expression.table_id=metadata_tables.id and projection is not null and "
+						"select metadata_expression.id,expression,projection,metadata_expression.condition,metadata_expression.having,metadata_expression.limit,metadata_expression.order from metadata_expression,metadata_tables "
+								+ "where metadata_expression.table_id=metadata_tables.id and "
 								+ "metadata_tables.name in ("
 								+ listToCSVWithQuote(tables_in_use) + ")");
 		while (rs.next()) {
 			p = Pattern.compile(rs.getString("expression"));
 			m = p.matcher(input);
 			if (m.find()) {
-				projectionList.add(evaluateExpressions(input,
-						rs.getInt("metadata_expression.id"),
-						rs.getString("metadata_expression.projection"),
-						conn_mysql, m.start(), m.end()));
-			}
-		}
-		rs.close();
-
-		// condition list
-		rs = conn_mysql
-				.createStatement()
-				.executeQuery(
-						"select metadata_expression.id,expression,metadata_expression.condition from metadata_expression,metadata_tables where metadata_expression.table_id=metadata_tables.id and metadata_expression.condition is not null and metadata_tables.name in ("
-								+ listToCSVWithQuote(tables_in_use) + ")");
-		while (rs.next()) {
-			p = Pattern.compile(rs.getString("expression"));
-			m = p.matcher(input);
-			while (m.find()) {
-				conditionList.add(evaluateExpressions(input,
-						rs.getInt("metadata_expression.id"),
-						rs.getString("metadata_expression.condition"),
-						conn_mysql, m.start(), m.end()));
-			}
-		}
-		rs.close();
-
-		// order list
-		rs = conn_mysql
-				.createStatement()
-				.executeQuery(
-						"select metadata_expression.id,expression,metadata_expression.order from metadata_expression,metadata_tables where metadata_expression.table_id=metadata_tables.id and metadata_expression.order is not null and metadata_tables.name in ("
-								+ listToCSVWithQuote(tables_in_use) + ")");
-		while (rs.next()) {
-			p = Pattern.compile(rs.getString("expression"));
-			m = p.matcher(input);
-			if (m.find()) {
-				orderList.add(evaluateExpressions(input,
-						rs.getInt("metadata_expression.id"),
-						rs.getString("metadata_expression.order"), conn_mysql,
-						m.start(), m.end()));
-			}
-		}
-		rs.close();
-
-		// limit list
-		rs = conn_mysql
-				.createStatement()
-				.executeQuery(
-						"select metadata_expression.id,expression,metadata_expression.limit from metadata_expression,metadata_tables where metadata_expression.table_id=metadata_tables.id and metadata_expression.limit is not null and metadata_tables.name in ("
-								+ listToCSVWithQuote(tables_in_use) + ")");
-		while (rs.next()) {
-			p = Pattern.compile(rs.getString("expression"));
-			m = p.matcher(input);
-			if (m.find()) {
-				limitList.add(evaluateExpressions(input,
-						rs.getInt("metadata_expression.id"),
-						rs.getString("metadata_expression.limit"), conn_mysql,
-						m.start(), m.end()));
-			}
-		}
-		rs.close();
-
-		// having list
-		rs = conn_mysql
-				.createStatement()
-				.executeQuery(
-						"select metadata_expression.id,expression,metadata_expression.having from metadata_expression,metadata_tables where metadata_expression.table_id=metadata_tables.id and metadata_expression.having is not null and metadata_tables.name in ("
-								+ listToCSVWithQuote(tables_in_use) + ")");
-		while (rs.next()) {
-			p = Pattern.compile(rs.getString("expression"));
-			m = p.matcher(input);
-			if (m.find()) {
-				havingList.add(evaluateExpressions(input,
-						rs.getInt("metadata_expression.id"),
-						rs.getString("metadata_expression.having"), conn_mysql,
-						m.start(), m.end()));
+				markKnown(input.substring(m.start(), m.end()));
+				if (rs.getString("metadata_expression.projection") != null)
+					projectionList.add(evaluateExpressions(input,
+							rs.getInt("metadata_expression.id"),
+							rs.getString("metadata_expression.projection"),
+							conn_mysql, m.start(), m.end()));
+				if (rs.getString("metadata_expression.condition") != null)
+					conditionList.add(evaluateExpressions(input,
+							rs.getInt("metadata_expression.id"),
+							rs.getString("metadata_expression.condition"),
+							conn_mysql, m.start(), m.end()));
+				if (rs.getString("metadata_expression.order") != null)
+					orderList.add(evaluateExpressions(input,
+							rs.getInt("metadata_expression.id"),
+							rs.getString("metadata_expression.order"),
+							conn_mysql, m.start(), m.end()));
+				if (rs.getString("metadata_expression.limit") != null)
+					limitList.add(evaluateExpressions(input,
+							rs.getInt("metadata_expression.id"),
+							rs.getString("metadata_expression.limit"),
+							conn_mysql, m.start(), m.end()));
+				if (rs.getString("metadata_expression.having") != null)
+					havingList.add(evaluateExpressions(input,
+							rs.getInt("metadata_expression.id"),
+							rs.getString("metadata_expression.having"),
+							conn_mysql, m.start(), m.end()));
 			}
 		}
 		rs.close();
 		String SQL = completeQuery(projectionList, conditionList, orderList,
 				limitList, groupList, havingList, tables_in_use, conn_mysql);
+		System.out.println("Unknow words : ");
+		for (String[] words : sentence_coverage) {
+			if (words[1].equals("0"))
+				System.out.println(words[0]);
+		}
 		return SQL;
+	}
+
+	private static void markKnown(String exclude) {
+		exclude = exclude.trim();
+		String tokens[] = exclude.split(" ");
+		for (int a = 0; a < sentence_coverage.size(); a++) {
+			if (sentence_coverage.get(a)[0].equals(tokens[0])) {
+				boolean match = true;
+				for (int i = 1; i < tokens.length; i++) {
+					if ((a + i) == sentence_coverage.size()) {
+						match = false;
+						break;
+					}
+					if (!sentence_coverage.get(a + i)[0].equals(tokens[i])) {
+						match = false;
+						break;
+					}
+				}
+				if (match) {
+					for (int i = 0; i < tokens.length; i++) {
+						String words[] = sentence_coverage.get(a + i);
+						words[1] = "1";
+						sentence_coverage.set(a + i, words);
+					}
+					continue;
+				}
+			}
+		}
 	}
 
 	public static String completeQuery(ArrayList<String> projectionList,
@@ -332,16 +366,64 @@ public class app2 {
 
 	private static ArrayList<String> getJoinConditions(
 			ArrayList<String> tables, Connection conn_mysql) throws Exception {
-		ArrayList<String> conditions = new ArrayList<String>();
-		ResultSet rs = conn_mysql.createStatement().executeQuery(
-				"SELECT * FROM metadata_table_join where table1 in ("
-						+ listToCSVWithQuote(tables) + ") and table2 in ("
-						+ listToCSVWithQuote(tables) + ")");
-		while (rs.next()) {
-			conditions.add(rs.getString("condition"));
+		Set<String> conditions = new HashSet<String>();
+		ArrayList<String> conditions_temp = new ArrayList<String>();
+
+		for (String table : tables) {
+			conditions_temp.clear();
+			int depth = 0;
+			String current_table = table;
+			while (depth <= relationship_depth && current_table != null) {
+				ResultSet rs = conn_mysql.createStatement().executeQuery(
+						"SELECT * FROM metadata_table_join where table2 ='"
+								+ current_table + "'");
+				if (rs.next()) {
+					current_table = rs.getString("table1");
+					conditions_temp.add(rs.getString("condition"));
+					boolean match = false;
+					for (String table_other : tables) {
+						if (table_other.equals(current_table)) {
+							match = true;
+							break;
+						}
+					}
+					if (match) {
+						conditions.addAll(conditions_temp);
+					}
+				} else
+					current_table = null;
+				depth++;
+				rs.close();
+			}
+			conditions_temp.clear();
+			depth = 0;
+			current_table = table;
+			while (depth <= relationship_depth && current_table != null) {
+				ResultSet rs = conn_mysql.createStatement().executeQuery(
+						"SELECT * FROM metadata_table_join where table1 ='"
+								+ current_table + "'");
+				if (rs.next()) {
+					current_table = rs.getString("table2");
+					conditions_temp.add(rs.getString("condition"));
+					boolean match = false;
+					for (String table_other : tables) {
+						if (table_other.equals(current_table)) {
+							match = true;
+							break;
+						}
+					}
+					if (match) {
+						conditions.addAll(conditions_temp);
+					}
+				} else
+					current_table = null;
+				depth++;
+				rs.close();
+			}
 		}
-		rs.close();
-		return conditions;
+		conditions_temp.clear();
+		conditions_temp.addAll(conditions);
+		return conditions_temp;
 	}
 
 	private static String evaluateExpressions(String input, int expr_id,
@@ -462,30 +544,24 @@ public class app2 {
 		return json;
 	}
 
-	// public static void main(String args[]) throws Exception {
-	// Class.forName("com.mysql.jdbc.Driver");
-	// Connection conn_mysql = DriverManager.getConnection("jdbc:mysql://"
-	// + MYSQL_DB_HOST + ":3306/" + MYSQL_DB_NAME
-	// + "?zeroDateTimeBehavior=convertToNull", MYSQL_DB_USERNAME,
-	// MYSQL_DB_PASSWORD);
-	//
-	// Statement statement = conn_mysql.createStatement();
-	// ResultSet rs = statement
-	// .executeQuery("select * from test where enable=1");
-	// String SQL = "";
-	// while (rs.next()) {
-	// SQL = getSQL(rs.getString("input"), conn_mysql);
-	// System.out.println(SQL);
-	// System.out.println();
-	// }
-	// rs.close();
-	//
-	// // if (SQL != null) {
-	// // rs = statement.executeQuery(SQL);
-	// // JSONArray json = convert(rs);
-	// // System.out.println(json);
-	// // }
-	//
-	// conn_mysql.close();
-	// }
+	public static void main(String args[]) throws Exception {
+		Class.forName("com.mysql.jdbc.Driver");
+		Connection conn_mysql = DriverManager.getConnection("jdbc:mysql://"
+				+ MYSQL_DB_HOST + ":3306/" + MYSQL_DB_NAME
+				+ "?zeroDateTimeBehavior=convertToNull", MYSQL_DB_USERNAME,
+				MYSQL_DB_PASSWORD);
+
+		Statement statement = conn_mysql.createStatement();
+		ResultSet rs = statement
+				.executeQuery("select * from test where enable=1");
+		String SQL = "";
+		while (rs.next()) {
+			SQL = getSQL(rs.getString("input"), conn_mysql);
+			System.out.println(SQL);
+			System.out.println();
+		}
+		rs.close();
+
+		conn_mysql.close();
+	}
 }
