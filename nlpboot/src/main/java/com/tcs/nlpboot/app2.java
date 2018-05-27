@@ -38,9 +38,26 @@ public class app2 {
 	static ArrayList<String> groupList = new ArrayList<String>();
 	static ArrayList<String> havingList = new ArrayList<String>();
 	static ArrayList<String[]> sentence_coverage = new ArrayList<String[]>();
+	static String header = "0";
+
+	public static String showHeader() {
+		return header;
+	}
+
+	public static String getUnknown() {
+		String unknown = "";
+		for (String[] words : sentence_coverage) {
+			if (words[1].equals("0"))
+				unknown += words[0] + ",";
+		}
+		if (unknown.endsWith(","))
+			unknown = unknown.substring(0, unknown.length() - 1);
+		return unknown.replaceAll(",", " ,");
+	}
 
 	public static String getSQL(String input, Connection conn_mysql)
 			throws Exception {
+		header = "0";
 		System.out.println("Input :           " + input);
 		word_replace = new ArrayList<String[]>();
 		wordpool = new ArrayList<String[]>();
@@ -138,7 +155,6 @@ public class app2 {
 			input = input.replaceAll("  ", " ");
 		}
 		input = input.trim();
-		String input_coverage = input;
 
 		// System.out.println("after word replacement .....");
 		// System.out.println(input);
@@ -179,15 +195,17 @@ public class app2 {
 		System.out.println("Related tables :  " + tables_in_use);
 
 		// columns in use
-		rs = conn_mysql
-				.createStatement()
-				.executeQuery(
-						"select concat(metadata_tables.name,'.',metadata_column.name) from "
-								+ "metadata_column,metadata_tables where "
-								+ "metadata_column.table_id=metadata_tables.id and metadata_tables.name in ("
-								+ listToCSVWithQuote(tables_in_use) + ")");
-		while (rs.next()) {
-			columns.add(rs.getString(1));
+		if (tables_in_use.size() != 0) {
+			rs = conn_mysql
+					.createStatement()
+					.executeQuery(
+							"select concat(metadata_tables.name,'.',metadata_column.name) from "
+									+ "metadata_column,metadata_tables where "
+									+ "metadata_column.table_id=metadata_tables.id and metadata_tables.name in ("
+									+ listToCSVWithQuote(tables_in_use) + ")");
+			while (rs.next()) {
+				columns.add(rs.getString(1));
+			}
 		}
 		rs.close();
 		System.out.println("Related columns : " + columns);
@@ -230,6 +248,7 @@ public class app2 {
 				if (rs.getString(5) != null) {
 					groupList.addAll(field);
 				}
+				header = rs.getString(6);
 			}
 		}
 		rs.close();

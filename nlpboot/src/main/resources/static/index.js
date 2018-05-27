@@ -9,6 +9,8 @@ app
 
 					console.log('controller() started');
 					$scope.error = 0;
+					$scope.showHeader=false;
+					$scope.Unknown='';
 					var interim_text = '';
 					var final_text = '';
 					$scope.question = '';
@@ -90,6 +92,11 @@ app
 																	$scope.error = 0;
 																	$scope.result = data.Result;
 																}
+																if(data.Header=="1")
+																	$scope.showHeader=true;
+																else
+																	$scope.showHeader=false;
+																$scope.Unknown=data.Unknown;
 																console
 																		.log('going to sleep');
 																final_text = '';

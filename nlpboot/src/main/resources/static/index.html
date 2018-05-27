@@ -28,7 +28,7 @@
 		<div class="container-fluid">
 			<div style="position: absolute; top: 110px;" id="table">
 				<table class="blueTable" ng-if="error==0">
-					<tr ng-if="$index==0" ng-repeat="row in result">
+					<tr ng-if="$index==0 && showHeader" ng-repeat="row in result">
 						<th ng-repeat="(key, data) in row">{{key}}
 						</th>
 					</tr>
@@ -37,7 +37,9 @@
 						</td>
 					</tr>
 				</table>
-				<span ng-if="error==1" style="color:red">Error: {{errortext}}</span>
+				<span ng-if="error==1">Sorry I could not understand that. </span>
+				<span ng-if="Unknown!='' && error==1">Word(s) not matched in the context : {{Unknown}}</span>
+				<span ng-if="Unknown!='' && error==0">I tried my best but not sure about this result. Word(s) not matched in the context : {{Unknown}}</span>
 			</div>
 		</div>
 	</div>

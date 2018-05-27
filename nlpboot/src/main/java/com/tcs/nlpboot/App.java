@@ -37,11 +37,23 @@ public class App {
 			if (SQL != null) {
 				ResultSet rs = statement.executeQuery(SQL);
 				JSONArray json = app2.convert(rs);
-				return ("{\"Result\":" + json.toString() + ",\"SQL\":\"" + SQL + "\"}");
+				System.out
+						.println("{\"Result\":" + json.toString()
+								+ ",\"Header\":\"" + app2.showHeader()
+								+ "\",\"SQL\":\"" + SQL + "\",\"Unknown\":\""
+								+ app2.getUnknown() + "\"}");
+				return ("{\"Result\":" + json.toString() + ",\"Header\":\""
+						+ app2.showHeader() + "\",\"SQL\":\"" + SQL
+						+ "\",\"Unknown\":\"" + app2.getUnknown() + "\"}");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ("{\"Error\":\"" + e.getMessage() + "\",\"SQL\":\"" + SQL + "\"}");
+			System.out.println("{\"Error\":\"" + e.getMessage()
+					+ "\",\"Header\":\"" + app2.showHeader() + "\",\"SQL\":\""
+					+ SQL + "\",\"Unknown\":\"" + app2.getUnknown() + "\"}");
+			return ("{\"Error\":\"" + e.getMessage() + "\",\"Header\":\""
+					+ app2.showHeader() + "\",\"SQL\":\"" + SQL
+					+ "\",\"Unknown\":\"" + app2.getUnknown() + "\"}");
 		} finally {
 			conn_mysql.close();
 		}
