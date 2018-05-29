@@ -37,6 +37,7 @@ public class app2 {
 	static ArrayList<String> v_tables = new ArrayList<String>();
 	static ArrayList<String> tables_in_use = new ArrayList<String>();
 	static ArrayList<String> columns = new ArrayList<String>();
+	static ArrayList<String> columnsProjectionEligible = new ArrayList<String>();
 	static ArrayList<String> primaryColumns = new ArrayList<String>();
 	static ArrayList<String> projectionList = new ArrayList<String>();
 	static ArrayList<String> conditionList = new ArrayList<String>();
@@ -142,6 +143,7 @@ public class app2 {
 
 		tables_in_use = new ArrayList<String>();
 		columns = new ArrayList<String>();
+		columnsProjectionEligible = new ArrayList<String>();
 		projectionList = new ArrayList<String>();
 		conditionList = new ArrayList<String>();
 		orderList = new ArrayList<String>();
@@ -211,12 +213,14 @@ public class app2 {
 			rs = conn_mysql
 					.createStatement()
 					.executeQuery(
-							"select concat(metadata_tables.name,'.',metadata_column.name) from "
+							"select concat(metadata_tables.name,'.',metadata_column.name),metadata_column.project from "
 									+ "metadata_column,metadata_tables where "
 									+ "metadata_column.table_id=metadata_tables.id and metadata_tables.name in ("
 									+ listToCSVWithQuote(tables_in_use) + ")");
 			while (rs.next()) {
 				columns.add(rs.getString(1));
+				if (rs.getString(2).equals("1"))
+					columnsProjectionEligible.add(rs.getString(1));
 			}
 		}
 		rs.close();
@@ -229,7 +233,8 @@ public class app2 {
 			}
 		}
 
-		rs = conn_mysql.createStatement().executeQuery("select * from starter");
+		rs = conn_mysql.createStatement().executeQuery(
+				"select * from metadata_starter");
 		while (rs.next()) {
 			if (input.startsWith(rs.getString(2))) {
 				markKnown(rs.getString(2));
@@ -246,7 +251,7 @@ public class app2 {
 				if (rs.getString(3).equals("nverb.all")) {
 					for (int i = 0; i < input_words.length; i++) {
 						if (isNonVerbTable(input_words[i])) {
-							field.addAll(getAllColumns(input_words[i]));
+							field.addAll(getAllColumnsProjectionEligible(input_words[i]));
 							break;
 						}
 					}
@@ -367,7 +372,7 @@ public class app2 {
 		if (!projectionList.isEmpty())
 			sql += listToCSV(projectionList);
 		else
-			sql = "*";
+			sql += "*";
 		sql += " from ";
 		if (!tables_in_use.isEmpty())
 			sql += listToCSV(tables_in_use) + " ";
@@ -545,6 +550,15 @@ public class app2 {
 		return all_columns;
 	}
 
+	public static ArrayList<String> getAllColumnsProjectionEligible(String table) {
+		ArrayList<String> all_columns = new ArrayList<String>();
+		for (String column : columnsProjectionEligible) {
+			if (column.contains(table))
+				all_columns.add(column);
+		}
+		return all_columns;
+	}
+
 	public static JSONArray convert(ResultSet rs) throws Exception,
 			JSONException {
 		JSONArray json = new JSONArray();
@@ -607,7 +621,7 @@ public class app2 {
 		String SQL = "";
 		while (rs.next()) {
 			SQL = getSQL(rs.getString("input"), conn_mysql);
-			System.out.println(SQL);
+			System.out.println("output : " +SQL);
 			System.out.println();
 		}
 		rs.close();
