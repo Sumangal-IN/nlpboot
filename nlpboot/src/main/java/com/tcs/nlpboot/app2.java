@@ -16,11 +16,18 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 public class app2 {
+	public static final String MYSQL_DB_HOST = "localhost";
+	public static final String MYSQL_DB_NAME = "nlp";
+	public static final String MYSQL_DB_USERNAME = "root";
+	public static final String MYSQL_DB_PASSWORD = "root";
+	public static final String MYSQL_DB_PORT = "3311";
 
-	public static final String MYSQL_DB_HOST = "u3y93bv513l7zv6o.chr7pe7iynqr.eu-west-1.rds.amazonaws.com";
-	public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
-	public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
-	public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
+	// public static final String MYSQL_DB_HOST =
+	// "nlp.cjotpija7r7c.us-east-1.rds.amazonaws.com";
+	// public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
+	// public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
+	// public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
+	// public static final String MYSQL_DB_PORT = "3306";
 
 	static int relationship_depth = 4;
 	static ArrayList<String[]> word_replace = new ArrayList<String[]>();
@@ -46,13 +53,19 @@ public class app2 {
 
 	public static String getUnknown() {
 		String unknown = "";
+		boolean first = true;
 		for (String[] words : sentence_coverage) {
-			if (words[1].equals("0"))
-				unknown += words[0] + ",";
+			if (words[1].equals("0")) {
+				if (!first) {
+					unknown = unknown.replaceAll(" and", " ,");
+					unknown += " and ";
+				}
+				unknown += words[0];
+				if (first)
+					first = false;
+			}
 		}
-		if (unknown.endsWith(","))
-			unknown = unknown.substring(0, unknown.length() - 1);
-		return unknown.replaceAll(",", " ,");
+		return unknown;
 	}
 
 	public static String getSQL(String input, Connection conn_mysql)
@@ -108,7 +121,7 @@ public class app2 {
 				nv_tables.add(rs.getString("name"));
 		}
 		rs.close();
-		// System.out.println("Verb tables :     " + v_tables);
+		// System.out.println("Verb tables : " + v_tables);
 		// System.out.println("Non Verb tables : " + nv_tables);
 		rs = statement.executeQuery("select * from metadata_table_join");
 		while (rs.next()) {
@@ -173,7 +186,6 @@ public class app2 {
 		Set<String> tables = new HashSet<String>();
 		for (int i = 0; i < input_words.length; i++) {
 			if (isVerbTable(input_words[i]) || isNonVerbTable(input_words[i])) {
-				markKnown(input_words[i]);
 				tables.add(input_words[i]);
 			}
 		}
@@ -210,6 +222,13 @@ public class app2 {
 		rs.close();
 		System.out.println("Related columns : " + columns);
 
+		for (int i = 0; i < input_words.length; i++) {
+			if (isVerbTable(input_words[i]) || isNonVerbTable(input_words[i])
+					|| isColumn(input_words[i])) {
+				markKnown(input_words[i]);
+			}
+		}
+
 		rs = conn_mysql.createStatement().executeQuery("select * from starter");
 		while (rs.next()) {
 			if (input.startsWith(rs.getString(2))) {
@@ -242,8 +261,8 @@ public class app2 {
 				if (rs.getString(4) == null) {
 					projectionList.addAll(field);
 				} else {
-					projectionList.add(rs.getString(4).replace(
-							"[" + rs.getString(3) + "]", field.get(0)));
+					projectionList.add(rs.getString(4).replaceAll(
+							"\\[" + rs.getString(3) + "\\]", field.get(0)));
 				}
 				if (rs.getString(5) != null) {
 					groupList.addAll(field);
@@ -294,6 +313,7 @@ public class app2 {
 			}
 		}
 		rs.close();
+		conditionList.addAll(getJoinConditions(tables_in_use, conn_mysql));
 		String SQL = completeQuery(projectionList, conditionList, orderList,
 				limitList, groupList, havingList, tables_in_use, conn_mysql);
 		System.out.println("Unknow words : ");
@@ -351,7 +371,6 @@ public class app2 {
 		sql += " from ";
 		if (!tables_in_use.isEmpty())
 			sql += listToCSV(tables_in_use) + " ";
-		conditionList.addAll(getJoinConditions(tables_in_use, conn_mysql));
 		if (!conditionList.isEmpty())
 			sql += "where " + listToCSV(conditionList).replace(",", " and ")
 					+ " ";
@@ -387,9 +406,12 @@ public class app2 {
 			ArrayList<String> tables, Connection conn_mysql) throws Exception {
 		Set<String> conditions = new HashSet<String>();
 		ArrayList<String> conditions_temp = new ArrayList<String>();
+		ArrayList<String> tables_temp = new ArrayList<String>();
+		ArrayList<String> tables_to_add = new ArrayList<String>();
 
 		for (String table : tables) {
 			conditions_temp.clear();
+			tables_temp.clear();
 			int depth = 0;
 			String current_table = table;
 			while (depth <= relationship_depth && current_table != null) {
@@ -398,10 +420,12 @@ public class app2 {
 								+ current_table + "'");
 				if (rs.next()) {
 					current_table = rs.getString("table1");
+					tables_temp.add(current_table);
 					conditions_temp.add(rs.getString("condition"));
 					boolean match = false;
 					for (String table_other : tables) {
 						if (table_other.equals(current_table)) {
+							tables_to_add.addAll(tables_temp);
 							match = true;
 							break;
 						}
@@ -415,6 +439,7 @@ public class app2 {
 				rs.close();
 			}
 			conditions_temp.clear();
+			tables_temp.clear();
 			depth = 0;
 			current_table = table;
 			while (depth <= relationship_depth && current_table != null) {
@@ -423,10 +448,12 @@ public class app2 {
 								+ current_table + "'");
 				if (rs.next()) {
 					current_table = rs.getString("table2");
+					tables_temp.add(current_table);
 					conditions_temp.add(rs.getString("condition"));
 					boolean match = false;
 					for (String table_other : tables) {
 						if (table_other.equals(current_table)) {
+							tables_to_add.addAll(tables_temp);
 							match = true;
 							break;
 						}
@@ -442,6 +469,10 @@ public class app2 {
 		}
 		conditions_temp.clear();
 		conditions_temp.addAll(conditions);
+		for (String table_to_add : tables_to_add) {
+			if (!tables_in_use.toString().contains(table_to_add))
+				tables_in_use.add(table_to_add);
+		}
 		return conditions_temp;
 	}
 
@@ -566,7 +597,7 @@ public class app2 {
 	public static void main(String args[]) throws Exception {
 		Class.forName("com.mysql.jdbc.Driver");
 		Connection conn_mysql = DriverManager.getConnection("jdbc:mysql://"
-				+ MYSQL_DB_HOST + ":3306/" + MYSQL_DB_NAME
+				+ MYSQL_DB_HOST + ":" + MYSQL_DB_PORT + "/" + MYSQL_DB_NAME
 				+ "?zeroDateTimeBehavior=convertToNull", MYSQL_DB_USERNAME,
 				MYSQL_DB_PASSWORD);
 

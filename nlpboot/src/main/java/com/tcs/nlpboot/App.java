@@ -16,10 +16,18 @@ import org.springframework.web.bind.annotation.*;
 @EnableAutoConfiguration
 public class App {
 
-	public static final String MYSQL_DB_HOST = "u3y93bv513l7zv6o.chr7pe7iynqr.eu-west-1.rds.amazonaws.com";
-	public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
-	public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
-	public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
+	public static final String MYSQL_DB_HOST = "localhost";
+	public static final String MYSQL_DB_NAME = "nlp";
+	public static final String MYSQL_DB_USERNAME = "root";
+	public static final String MYSQL_DB_PASSWORD = "root";
+	public static final String MYSQL_DB_PORT = "3311";
+
+	// public static final String MYSQL_DB_HOST =
+	// "nlp.cjotpija7r7c.us-east-1.rds.amazonaws.com";
+	// public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
+	// public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
+	// public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
+	// public static final String MYSQL_DB_PORT = "3306";
 
 	@RequestMapping(value = "/QueryProcessor", method = RequestMethod.GET)
 	@ResponseBody
@@ -29,7 +37,7 @@ public class App {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			conn_mysql = DriverManager.getConnection("jdbc:mysql://"
-					+ MYSQL_DB_HOST + ":3306/" + MYSQL_DB_NAME
+					+ MYSQL_DB_HOST + ":" + MYSQL_DB_PORT + "/" + MYSQL_DB_NAME
 					+ "?zeroDateTimeBehavior=convertToNull", MYSQL_DB_USERNAME,
 					MYSQL_DB_PASSWORD);
 			Statement statement = conn_mysql.createStatement();
@@ -37,11 +45,10 @@ public class App {
 			if (SQL != null) {
 				ResultSet rs = statement.executeQuery(SQL);
 				JSONArray json = app2.convert(rs);
-				System.out
-						.println("{\"Result\":" + json.toString()
-								+ ",\"Header\":\"" + app2.showHeader()
-								+ "\",\"SQL\":\"" + SQL + "\",\"Unknown\":\""
-								+ app2.getUnknown() + "\"}");
+				System.out.println("{\"Result\":" + json.toString()
+						+ ",\"Header\":\"" + app2.showHeader()
+						+ "\",\"SQL\":\"" + SQL + "\",\"Unknown\":\""
+						+ app2.getUnknown() + "\"}");
 				return ("{\"Result\":" + json.toString() + ",\"Header\":\""
 						+ app2.showHeader() + "\",\"SQL\":\"" + SQL
 						+ "\",\"Unknown\":\"" + app2.getUnknown() + "\"}");

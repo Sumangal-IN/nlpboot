@@ -9,8 +9,8 @@ app
 
 					console.log('controller() started');
 					$scope.error = 0;
-					$scope.showHeader=false;
-					$scope.Unknown='';
+					$scope.showHeader = false;
+					$scope.Unknown = '';
 					var interim_text = '';
 					var final_text = '';
 					$scope.question = '';
@@ -92,17 +92,75 @@ app
 																	$scope.error = 0;
 																	$scope.result = data.Result;
 																}
-																if(data.Header=="1")
-																	$scope.showHeader=true;
+																if (data.Header == "1")
+																	$scope.showHeader = true;
 																else
-																	$scope.showHeader=false;
-																$scope.Unknown=data.Unknown;
+																	$scope.showHeader = false;
+																$scope.Unknown = data.Unknown;
 																console
 																		.log('going to sleep');
 																final_text = '';
 																interim_text = '';
 																$scope.input_state = 'search-input-red';
 																ignore = true;
+
+																var text = '';
+																if (data.Result != undefined) {
+																	if ($scope.showHeader) {
+																		for (var a = 0; a < data.Result.length; a++) {
+																			for (key in data.Result[a]) {
+																				text += " "
+																						+ key
+																								.toString()
+																								.replace(
+																										new RegExp(
+																												'_',
+																												'g'),
+																										' ')
+																						+ " "
+																						+ data.Result[a][key]
+																								.toString()
+																								.replace(
+																										new RegExp(
+																												'_',
+																												'g'),
+																										' ')
+																						+ ",";
+																			}
+																		}
+																	} else {
+																		for (var a = 0; a < data.Result.length; a++) {
+																			for (key in data.Result[a]) {
+																				text += " "
+																						+ data.Result[a][key]
+																								.toString()
+																								.replace(
+																										new RegExp(
+																												'_',
+																												'g'),
+																										' ')
+																						+ ",";
+																			}
+																		}
+																	}
+																}
+																if ($scope.error == 1) {
+																	text += "Sorry I could not understand that. ";
+																	if ($scope.Unknown != '') {
+																		text += "Words not matched in the context are "
+																				+ $scope.Unknown;
+																	}
+																}
+																if ($scope.error == 0) {
+																	if ($scope.Unknown != '') {
+																		text += ". I tried my best but not sure about this result. Words not matched in the context are "
+																				+ $scope.Unknown;
+																	}
+																}
+																var msg = new SpeechSynthesisUtterance(
+																		text);
+																window.speechSynthesis
+																		.speak(msg);
 															},
 															function errorCallback(
 																	response) {
