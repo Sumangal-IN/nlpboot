@@ -19,8 +19,7 @@
 				style="margin-top: 30px; width: 100%">
 				<div class="input-group">
 					<input class="form-control input-lg" ng-class="input_state"
-						id="inputlg" type="text" placeholder="Say Kingfisher ..."
-						ng-model="question">
+						id="inputlg" type="text" placeholder="" ng-model="question">
 				</div>
 			</div>
 		</div>
@@ -29,17 +28,17 @@
 			<div style="position: absolute; top: 110px;" id="table">
 				<table class="blueTable" ng-if="error==0">
 					<tr ng-if="$index==0 && showHeader" ng-repeat="row in result">
-						<th ng-repeat="(key, data) in row">{{key}}
-						</th>
+						<th ng-repeat="(key, data) in row">{{key}}</th>
 					</tr>
 					<tr ng-repeat="row in result">
-						<td ng-repeat="(key, data) in row">{{data}}
-						</td>
+						<td ng-repeat="(key, data) in row">{{data}}</td>
 					</tr>
 				</table>
-				<span ng-if="error==1">Sorry I could not understand that. </span>
-				<span ng-if="Unknown!='' && error==1">Word(s) not matched in the context : {{Unknown}}</span>
-				<span ng-if="Unknown!='' && error==0">I tried my best but not sure about this result. Word(s) not matched in the context : {{Unknown}}</span>
+				<span ng-if="error==1">Sorry I could not understand that. </span> <span
+					ng-if="Unknown!='' && error==1">Word(s) not matched in the
+					context : {{Unknown}}</span> <span ng-if="Unknown!='' && error==0">I
+					tried my best but not sure about this result. Word(s) not matched
+					in the context : {{Unknown}}</span>
 			</div>
 		</div>
 	</div>

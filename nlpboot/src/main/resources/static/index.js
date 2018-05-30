@@ -58,15 +58,15 @@ app
 										console.log('process >> ' + final_text);
 										var question = (final_text).trim()
 												.toUpperCase();
-										if (question.startsWith('KINGFISHER')) {
-											question = question.substring(11);
+										if (question.startsWith('OLIVIA')) {
+											question = question.substring(7);
 										}
 										$scope.question = question;
 										$scope.$apply();
 										final_text = '';
 										interim_text = '';
-										if (question.startsWith('KINGFISHER')) {
-											question = question.substring(11);
+										if (question.startsWith('OLIVIA')) {
+											question = question.substring(7);
 										}
 										if (question != '') {
 											console.log('/QueryProcessor?text='
@@ -172,8 +172,8 @@ app
 										interim_text += event.results[i][0].transcript;
 										var question = (final_text + ' ' + interim_text)
 												.trim().toUpperCase();
-										if (question.startsWith('KINGFISHER')) {
-											question = question.substring(11);
+										if (question.startsWith('OLIVIA')) {
+											question = question.substring(7);
 										}
 										$scope.question = question;
 										$scope.$apply();
@@ -181,13 +181,17 @@ app
 								} else {
 									console.log((event.results[i][0].transcript
 											.toUpperCase())
-											.startsWith('KINGFISHER'));
+											.startsWith('OLIVIA'));
 									if ((event.results[i][0].transcript.trim()
 											.toUpperCase())
-											.startsWith('KINGFISHER')) {
+											.startsWith('OLIVIA')) {
 										$scope.input_state = 'search-input-green';
 										ignore = false;
 										$scope.$apply();
+										var msg = new SpeechSynthesisUtterance(
+												"Yes");
+										window.speechSynthesis
+												.speak(msg);
 									}
 								}
 							}
