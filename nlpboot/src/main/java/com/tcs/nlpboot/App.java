@@ -16,18 +16,17 @@ import org.springframework.web.bind.annotation.*;
 @EnableAutoConfiguration
 public class App {
 
-	public static final String MYSQL_DB_HOST = "localhost";
+	/*public static final String MYSQL_DB_HOST = "localhost";
 	public static final String MYSQL_DB_NAME = "nlp";
 	public static final String MYSQL_DB_USERNAME = "root";
 	public static final String MYSQL_DB_PASSWORD = "root";
-	public static final String MYSQL_DB_PORT = "3311";
+	public static final String MYSQL_DB_PORT = "3311";*/
 
-	// public static final String MYSQL_DB_HOST =
-	// "nlp.cjotpija7r7c.us-east-1.rds.amazonaws.com";
-	// public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
-	// public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
-	// public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
-	// public static final String MYSQL_DB_PORT = "3306";
+	public static final String MYSQL_DB_HOST = "nlp.cjotpija7r7c.us-east-1.rds.amazonaws.com";
+	public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
+	public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
+	public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
+	public static final String MYSQL_DB_PORT = "3306";
 
 	@RequestMapping(value = "/QueryProcessor", method = RequestMethod.GET)
 	@ResponseBody
