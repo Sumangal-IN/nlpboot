@@ -16,18 +16,17 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 public class app2 {
-	public static final String MYSQL_DB_HOST = "localhost";
+	/*public static final String MYSQL_DB_HOST = "localhost";
 	public static final String MYSQL_DB_NAME = "nlp";
 	public static final String MYSQL_DB_USERNAME = "root";
 	public static final String MYSQL_DB_PASSWORD = "root";
-	public static final String MYSQL_DB_PORT = "3311";
+	public static final String MYSQL_DB_PORT = "3311";*/
 
-	// public static final String MYSQL_DB_HOST =
-	// "nlp.cjotpija7r7c.us-east-1.rds.amazonaws.com";
-	// public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
-	// public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
-	// public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
-	// public static final String MYSQL_DB_PORT = "3306";
+	public static final String MYSQL_DB_HOST = "nlp.cjotpija7r7c.us-east-1.rds.amazonaws.com";
+	public static final String MYSQL_DB_NAME = "ip83rudxmkl9e98c";
+	public static final String MYSQL_DB_USERNAME = "eegxixxjams6wn5e";
+	public static final String MYSQL_DB_PASSWORD = "ib05z62xqbk0uozd";
+	public static final String MYSQL_DB_PORT = "3306";
 
 	static int relationship_depth = 4;
 	static ArrayList<String[]> word_replace = new ArrayList<String[]>();
@@ -612,7 +611,7 @@ public class app2 {
 		return json;
 	}
 
-	public static void main(String args[]) throws Exception {
+	/*public static void main(String args[]) throws Exception {
 		Class.forName("com.mysql.jdbc.Driver");
 		Connection conn_mysql = DriverManager.getConnection("jdbc:mysql://"
 				+ MYSQL_DB_HOST + ":" + MYSQL_DB_PORT + "/" + MYSQL_DB_NAME
@@ -631,5 +630,5 @@ public class app2 {
 		rs.close();
 
 		conn_mysql.close();
-	}
+	}*/
 }
